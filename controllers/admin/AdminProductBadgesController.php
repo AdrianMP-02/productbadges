@@ -181,28 +181,6 @@ class AdminProductBadgesController extends ModuleAdminController
     }
 
     // -------------------------------------------------------------------------
-    // Save – persist product assignment alongside the ObjectModel
-    // processSave runs before the redirect is triggered, so it is safe to
-    // call saveProductAssignments here.
-    // -------------------------------------------------------------------------
-
-    public function processSave()
-    {
-        $object = parent::processSave();
-
-        if ($this->object && $this->object->id) {
-            $rawIds = Tools::getValue('assigned_product_ids', '');
-            $ids    = array_filter(
-                array_map('intval', explode(',', $rawIds)),
-                static fn(int $v) => $v > 0
-            );
-            $this->object->saveProductAssignments($ids);
-        }
-
-        return $object;
-    }
-
-    // -------------------------------------------------------------------------
     // AJAX – product autocomplete
     // -------------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ class ProductBadges extends Module
     {
         $this->name      = 'productbadges';
         $this->tab       = 'front_office_features';
-        $this->version   = '1.0.0';
+        $this->version   = '1.0.2';
         $this->author    = 'Custom';
         $this->bootstrap = true;
 
@@ -269,6 +269,7 @@ class ProductBadges extends Module
         }
 
         $this->context->controller->addCSS($this->_path . 'views/css/productbadges.css');
+        $this->context->controller->addJS($this->_path . 'views/js/productbadges_front.js');
     }
 
     /**

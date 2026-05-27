@@ -12,20 +12,34 @@
   position: relative;
 }
 
-/* Wrapper sits flush over the image area */
+/* Wrapper sits flush over the image area.
+   Two flex columns (left / right) stack badges vertically on each side. */
 .productbadges-wrapper {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  pointer-events: none; /* clicks fall through to the product link */
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
   z-index: 10;
+}
+
+.productbadges-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.productbadges-col--right {
+  align-items: flex-end;
 }
 
 /* Individual badge pill */
 .productbadge {
-  position: absolute;
-  top: 8px;
+  display: inline-block;
   padding: 4px 9px;
   font-size: 11px;
   font-weight: 700;
@@ -34,27 +48,16 @@
   letter-spacing: 0.04em;
   border-radius: 2px;
   white-space: nowrap;
-  pointer-events: none;
 }
 
-.productbadge--left  { left:  8px; }
-.productbadge--right { right: 8px; }
-
-/* Stack multiple badges on the same side vertically */
-.productbadge ~ .productbadge--left  { top: auto; }
-.productbadge ~ .productbadge--right { top: auto; }
-
-/* On the product detail page the wrapper is inside the additional-info
-   area rather than directly over the image, so we override position. */
+/* Product page/quick-view: JS moves this wrapper into .product-cover.
+   Before JS runs it is hidden to avoid a flash of misplaced content. */
 .productbadges-wrapper--product-page {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  pointer-events: none;
+  display: none;
 }
 
-.productbadges-wrapper--product-page .productbadge {
-  position: static;
-  display: inline-block;
+/* Once JS has repositioned it into the image container, the wrapper
+   becomes visible and uses the same flex overlay as in listings. */
+.productbadges-wrapper--product-page.pb-positioned {
+  display: flex;
 }
