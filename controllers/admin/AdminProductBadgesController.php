@@ -31,7 +31,7 @@ class AdminProductBadgesController extends ModuleAdminController
             ],
             'label' => [
                 'title'  => $this->l('Label'),
-                'filter_key' => 'bl!label',
+                'filter_key' => 'b!label',
             ],
             'bg_color' => [
                 'title'   => $this->l('Background'),
@@ -186,7 +186,7 @@ class AdminProductBadgesController extends ModuleAdminController
     // call saveProductAssignments here.
     // -------------------------------------------------------------------------
 
-    protected function processSave()
+    public function processSave()
     {
         $object = parent::processSave();
 
