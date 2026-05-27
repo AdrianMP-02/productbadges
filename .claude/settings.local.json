@@ -4,7 +4,13 @@
       "PowerShell(Test-Path \"D:\\\\Proyectos\\\\productbadges\" && \\(Get-ChildItem \"D:\\\\Proyectos\\\\productbadges\" -Force -ErrorAction Stop | Measure-Object\\).Count)",
       "PowerShell(Get-ChildItem *)",
       "PowerShell($items = @\\(Get-ChildItem \"D:\\\\Proyectos\\\\productbadges\\\\.claude\" -Force\\); Write-Host \".claude directory contains $\\($items.Count\\) items\"; if \\($items.Count -gt 0\\) { $items | ForEach-Object { Write-Host $_.FullName } })",
-      "Bash(xargs grep -l \"ModuleAdminController\")"
+      "Bash(xargs grep -l \"ModuleAdminController\")",
+      "Bash(xargs grep -l \"displayProductListingAction\")",
+      "Bash(xargs grep -l \"highlighted-informations\")",
+      "Bash(xargs grep -l \"hook.*displayProductListingAction\")",
+      "Bash(xargs grep -l \"product-miniature\\\\|highlighted-informations\")",
+      "Bash(xargs grep -l \"product_miniature\\\\|miniatures\")",
+      "Bash(grep -r \"Hook::exec\\\\|\\(\\\\$.*hook\" \"D:/Proyectos/Prestashop\" --include=\"*.php\")"
     ]
   }
 }

@@ -1,7 +1,7 @@
 {**
  * Badges overlay – product detail page.
  * Injected via displayProductAdditionalInfo hook.
- * The wrapper uses position:absolute so it overlays the product image.
+ * JS (productbadges_front.js) repositions this wrapper into .product-cover.
  *}
 {if isset($badges) && $badges|count > 0}
   <div class="productbadges-wrapper productbadges-wrapper--product-page">

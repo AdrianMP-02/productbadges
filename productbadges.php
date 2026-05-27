@@ -19,8 +19,8 @@ class ProductBadges extends Module
     {
         $this->name      = 'productbadges';
         $this->tab       = 'front_office_features';
-        $this->version   = '1.0.2';
-        $this->author    = 'Custom';
+        $this->version   = '1.1.1';
+        $this->author    = 'Adrian Martin';
         $this->bootstrap = true;
 
         parent::__construct();
@@ -53,6 +53,8 @@ class ProductBadges extends Module
 
     public function uninstall(): bool
     {
+        $this->unregisterHook('displayProductCoverImage');
+
         return $this->uninstallSql()
             && $this->uninstallTab()
             && $this->uninstallConfig()
@@ -297,7 +299,7 @@ class ProductBadges extends Module
 
     /**
      * Fires on the product detail page.
-     * $params['product'] is the Product object in PS 1.7.
+     * JS (productbadges_front.js) repositions the wrapper into .product-cover.
      */
     public function hookDisplayProductAdditionalInfo($params): string
     {
