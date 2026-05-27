@@ -17,7 +17,7 @@ class ProductBadge extends ObjectModel
     public $text_color = '#FFFFFF';
     public $position   = 0;
     public $active     = 1;
-    public $label      = '';
+    public $label;          // multilang — must not have a default string value
     public $date_add;
     public $date_upd;
 

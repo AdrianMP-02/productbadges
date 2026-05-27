@@ -31,7 +31,7 @@ class AdminProductBadgesController extends ModuleAdminController
             ],
             'label' => [
                 'title'  => $this->l('Label'),
-                'filter_key' => 'bl!label',
+                'filter_key' => 'b!label',
             ],
             'bg_color' => [
                 'title'   => $this->l('Background'),
@@ -178,28 +178,6 @@ class AdminProductBadgesController extends ModuleAdminController
         }
 
         return $baseForm;
-    }
-
-    // -------------------------------------------------------------------------
-    // Save – persist product assignment alongside the ObjectModel
-    // processSave runs before the redirect is triggered, so it is safe to
-    // call saveProductAssignments here.
-    // -------------------------------------------------------------------------
-
-    protected function processSave()
-    {
-        $object = parent::processSave();
-
-        if ($this->object && $this->object->id) {
-            $rawIds = Tools::getValue('assigned_product_ids', '');
-            $ids    = array_filter(
-                array_map('intval', explode(',', $rawIds)),
-                static fn(int $v) => $v > 0
-            );
-            $this->object->saveProductAssignments($ids);
-        }
-
-        return $object;
     }
 
     // -------------------------------------------------------------------------

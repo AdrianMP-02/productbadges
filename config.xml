@@ -2,9 +2,9 @@
 <module>
     <name>productbadges</name>
     <displayName><![CDATA[Product Badges]]></displayName>
-    <version><![CDATA[1.0.0]]></version>
+    <version><![CDATA[1.1.1]]></version>
     <description><![CDATA[Manage reusable visual badges (labels) on product images.]]></description>
-    <author><![CDATA[Custom]]></author>
+    <author><![CDATA[Adrian Martin]]></author>
     <tab><![CDATA[front_office_features]]></tab>
     <confirmUninstall><![CDATA[Are you sure you want to uninstall? All badge data will be deleted.]]></confirmUninstall>
     <is_configurable>1</is_configurable>
