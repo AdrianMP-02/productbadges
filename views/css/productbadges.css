@@ -1,0 +1,60 @@
+/* ============================================================
+   productbadges – frontend overlay styles
+   ============================================================ */
+
+/* The product thumbnail containers in the Classic theme and most
+   PS 1.7 themes already have position:relative on .product-thumbnail
+   or .product-miniature .thumbnail-container.
+   The override below adds it as a safety net for custom themes. */
+.product-miniature .thumbnail-container,
+.product-miniature .product-thumbnail,
+.product-thumbnail {
+  position: relative;
+}
+
+/* Wrapper sits flush over the image area */
+.productbadges-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none; /* clicks fall through to the product link */
+  z-index: 10;
+}
+
+/* Individual badge pill */
+.productbadge {
+  position: absolute;
+  top: 8px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.productbadge--left  { left:  8px; }
+.productbadge--right { right: 8px; }
+
+/* Stack multiple badges on the same side vertically */
+.productbadge ~ .productbadge--left  { top: auto; }
+.productbadge ~ .productbadge--right { top: auto; }
+
+/* On the product detail page the wrapper is inside the additional-info
+   area rather than directly over the image, so we override position. */
+.productbadges-wrapper--product-page {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.productbadges-wrapper--product-page .productbadge {
+  position: static;
+  display: inline-block;
+}

@@ -1,0 +1,341 @@
+<?php
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
+require_once __DIR__ . '/classes/ProductBadge.php';
+
+class ProductBadges extends Module
+{
+    /** @var string[] Configuration keys managed by this module */
+    private const CONFIG_KEYS = [
+        'PRODUCTBADGES_ACTIVE',
+        'PRODUCTBADGES_SHOW_LISTING',
+        'PRODUCTBADGES_SHOW_PRODUCT',
+        'PRODUCTBADGES_MAX_BADGES',
+    ];
+
+    public function __construct()
+    {
+        $this->name      = 'productbadges';
+        $this->tab       = 'front_office_features';
+        $this->version   = '1.0.0';
+        $this->author    = 'Custom';
+        $this->bootstrap = true;
+
+        parent::__construct();
+
+        $this->displayName = $this->l('Product Badges');
+        $this->description = $this->l('Manage reusable visual badges (labels) on product images.');
+        $this->ps_versions_compliancy = ['min' => '1.7.0.0', 'max' => _PS_VERSION_];
+    }
+
+    // -------------------------------------------------------------------------
+    // Install / Uninstall
+    // -------------------------------------------------------------------------
+
+    public function install(): bool
+    {
+        if (Shop::isFeatureActive()) {
+            Shop::setContext(Shop::CONTEXT_ALL);
+        }
+
+        return parent::install()
+            && $this->installSql()
+            && $this->installTab()
+            && $this->installConfig()
+            && $this->registerHook([
+                'displayHeader',
+                'displayProductListingAction',
+                'displayProductAdditionalInfo',
+            ]);
+    }
+
+    public function uninstall(): bool
+    {
+        return $this->uninstallSql()
+            && $this->uninstallTab()
+            && $this->uninstallConfig()
+            && parent::uninstall();
+    }
+
+    private function installSql(): bool
+    {
+        $p = _DB_PREFIX_;
+        $sql = [
+            "CREATE TABLE IF NOT EXISTS `{$p}productbadges` (
+                `id_badge`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `bg_color`   VARCHAR(7)   NOT NULL DEFAULT '#FF0000',
+                `text_color` VARCHAR(7)   NOT NULL DEFAULT '#FFFFFF',
+                `position`   TINYINT(1)   NOT NULL DEFAULT 0,
+                `active`     TINYINT(1)   NOT NULL DEFAULT 1,
+                `date_add`   DATETIME     NOT NULL,
+                `date_upd`   DATETIME     NOT NULL,
+                PRIMARY KEY (`id_badge`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            "CREATE TABLE IF NOT EXISTS `{$p}productbadges_lang` (
+                `id_badge` INT UNSIGNED NOT NULL,
+                `id_lang`  INT UNSIGNED NOT NULL,
+                `label`    VARCHAR(255) NOT NULL DEFAULT '',
+                PRIMARY KEY (`id_badge`, `id_lang`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            "CREATE TABLE IF NOT EXISTS `{$p}productbadges_product` (
+                `id_badge`   INT UNSIGNED NOT NULL,
+                `id_product` INT UNSIGNED NOT NULL,
+                PRIMARY KEY (`id_badge`, `id_product`),
+                KEY `idx_product` (`id_product`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ];
+
+        foreach ($sql as $query) {
+            if (!Db::getInstance()->execute($query)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function uninstallSql(): bool
+    {
+        $p = _DB_PREFIX_;
+        $sql = [
+            "DROP TABLE IF EXISTS `{$p}productbadges_product`",
+            "DROP TABLE IF EXISTS `{$p}productbadges_lang`",
+            "DROP TABLE IF EXISTS `{$p}productbadges`",
+        ];
+
+        foreach ($sql as $query) {
+            if (!Db::getInstance()->execute($query)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function installTab(): bool
+    {
+        $tab = new Tab();
+        $tab->active     = 1;
+        $tab->class_name = 'AdminProductBadges';
+        $tab->module     = $this->name;
+        $tab->id_parent  = (int) Tab::getIdFromClassName('AdminCatalog');
+        $tab->name       = [];
+
+        foreach (Language::getLanguages(true) as $lang) {
+            $tab->name[$lang['id_lang']] = 'Product Badges';
+        }
+
+        return (bool) $tab->add();
+    }
+
+    private function uninstallTab(): bool
+    {
+        $idTab = (int) Tab::getIdFromClassName('AdminProductBadges');
+
+        if ($idTab) {
+            $tab = new Tab($idTab);
+            return (bool) $tab->delete();
+        }
+
+        return true;
+    }
+
+    private function installConfig(): bool
+    {
+        return Configuration::updateValue('PRODUCTBADGES_ACTIVE', 1)
+            && Configuration::updateValue('PRODUCTBADGES_SHOW_LISTING', 1)
+            && Configuration::updateValue('PRODUCTBADGES_SHOW_PRODUCT', 1)
+            && Configuration::updateValue('PRODUCTBADGES_MAX_BADGES', 3);
+    }
+
+    private function uninstallConfig(): bool
+    {
+        foreach (self::CONFIG_KEYS as $key) {
+            Configuration::deleteByName($key);
+        }
+
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Module configuration page
+    // -------------------------------------------------------------------------
+
+    public function getContent(): string
+    {
+        $output = '';
+
+        if (Tools::isSubmit('submitProductBadgesConfig')) {
+            $active      = (int) Tools::getValue('PRODUCTBADGES_ACTIVE');
+            $showListing = (int) Tools::getValue('PRODUCTBADGES_SHOW_LISTING');
+            $showProduct = (int) Tools::getValue('PRODUCTBADGES_SHOW_PRODUCT');
+            $maxBadges   = max(1, (int) Tools::getValue('PRODUCTBADGES_MAX_BADGES'));
+
+            Configuration::updateValue('PRODUCTBADGES_ACTIVE',       $active);
+            Configuration::updateValue('PRODUCTBADGES_SHOW_LISTING', $showListing);
+            Configuration::updateValue('PRODUCTBADGES_SHOW_PRODUCT', $showProduct);
+            Configuration::updateValue('PRODUCTBADGES_MAX_BADGES',   $maxBadges);
+
+            $output .= $this->displayConfirmation($this->l('Settings saved.'));
+        }
+
+        return $output . $this->renderConfigForm();
+    }
+
+    private function renderConfigForm(): string
+    {
+        $helper = new HelperForm();
+        $helper->module          = $this;
+        $helper->name_controller = $this->name;
+        $helper->token           = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex    = AdminController::$currentIndex . '&configure=' . $this->name;
+        $helper->submit_action   = 'submitProductBadgesConfig';
+        $helper->default_form_language = (int) Configuration::get('PS_LANG_DEFAULT');
+
+        $helper->tpl_vars = [
+            'fields_value' => [
+                'PRODUCTBADGES_ACTIVE'       => (int) Configuration::get('PRODUCTBADGES_ACTIVE'),
+                'PRODUCTBADGES_SHOW_LISTING' => (int) Configuration::get('PRODUCTBADGES_SHOW_LISTING'),
+                'PRODUCTBADGES_SHOW_PRODUCT' => (int) Configuration::get('PRODUCTBADGES_SHOW_PRODUCT'),
+                'PRODUCTBADGES_MAX_BADGES'   => (int) Configuration::get('PRODUCTBADGES_MAX_BADGES'),
+            ],
+            'languages'       => $this->context->controller->getLanguages(),
+            'id_language'     => $this->context->language->id,
+        ];
+
+        $form = [
+            'form' => [
+                'legend' => [
+                    'title' => $this->l('Product Badges Settings'),
+                    'icon'  => 'icon-cog',
+                ],
+                'input' => [
+                    [
+                        'type'    => 'switch',
+                        'label'   => $this->l('Enable module'),
+                        'name'    => 'PRODUCTBADGES_ACTIVE',
+                        'values'  => $this->getSwitchValues(),
+                    ],
+                    [
+                        'type'    => 'switch',
+                        'label'   => $this->l('Show badges in product listings'),
+                        'name'    => 'PRODUCTBADGES_SHOW_LISTING',
+                        'values'  => $this->getSwitchValues(),
+                    ],
+                    [
+                        'type'    => 'switch',
+                        'label'   => $this->l('Show badges on product page'),
+                        'name'    => 'PRODUCTBADGES_SHOW_PRODUCT',
+                        'values'  => $this->getSwitchValues(),
+                    ],
+                    [
+                        'type'    => 'text',
+                        'label'   => $this->l('Max visible badges per product'),
+                        'name'    => 'PRODUCTBADGES_MAX_BADGES',
+                        'class'   => 'fixed-width-sm',
+                        'suffix'  => $this->l('badges'),
+                        'desc'    => $this->l('Maximum number of badges shown simultaneously (0 = unlimited).'),
+                    ],
+                ],
+                'submit' => [
+                    'title' => $this->l('Save'),
+                ],
+            ],
+        ];
+
+        return $helper->generateForm([$form]);
+    }
+
+    private function getSwitchValues(): array
+    {
+        return [
+            ['id' => 'active_on',  'value' => 1, 'label' => $this->l('Yes')],
+            ['id' => 'active_off', 'value' => 0, 'label' => $this->l('No')],
+        ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Hooks
+    // -------------------------------------------------------------------------
+
+    public function hookDisplayHeader($params): void
+    {
+        if (!Configuration::get('PRODUCTBADGES_ACTIVE')) {
+            return;
+        }
+
+        $this->context->controller->addCSS($this->_path . 'views/css/productbadges.css');
+    }
+
+    /**
+     * Fires once per product in any listing (category, search, home featured…).
+     * $params['product'] is an array in PS 1.7 (product listing object).
+     */
+    public function hookDisplayProductListingAction($params): string
+    {
+        if (!Configuration::get('PRODUCTBADGES_ACTIVE')
+            || !Configuration::get('PRODUCTBADGES_SHOW_LISTING')
+        ) {
+            return '';
+        }
+
+        $idProduct = isset($params['product']['id_product'])
+            ? (int) $params['product']['id_product']
+            : (isset($params['product']['id']) ? (int) $params['product']['id'] : 0);
+
+        if (!$idProduct) {
+            return '';
+        }
+
+        return $this->renderBadges($idProduct, 'product_badges.tpl');
+    }
+
+    /**
+     * Fires on the product detail page.
+     * $params['product'] is the Product object in PS 1.7.
+     */
+    public function hookDisplayProductAdditionalInfo($params): string
+    {
+        if (!Configuration::get('PRODUCTBADGES_ACTIVE')
+            || !Configuration::get('PRODUCTBADGES_SHOW_PRODUCT')
+        ) {
+            return '';
+        }
+
+        $idProduct = 0;
+        if (isset($params['product'])) {
+            $idProduct = is_array($params['product'])
+                ? (int) ($params['product']['id_product'] ?? $params['product']['id'] ?? 0)
+                : (int) $params['product']->id;
+        }
+
+        if (!$idProduct) {
+            return '';
+        }
+
+        return $this->renderBadges($idProduct, 'product_page_badges.tpl');
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private function renderBadges(int $idProduct, string $tpl): string
+    {
+        $idLang = (int) $this->context->language->id;
+        $max    = (int) Configuration::get('PRODUCTBADGES_MAX_BADGES');
+        $badges = ProductBadge::getByProduct($idProduct, $idLang, $max);
+
+        if (empty($badges)) {
+            return '';
+        }
+
+        $this->context->smarty->assign('badges', $badges);
+
+        return $this->display(__FILE__, 'views/templates/hook/' . $tpl);
+    }
+}

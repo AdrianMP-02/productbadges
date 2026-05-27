@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Test-Path \"D:\\\\Proyectos\\\\productbadges\" && \\(Get-ChildItem \"D:\\\\Proyectos\\\\productbadges\" -Force -ErrorAction Stop | Measure-Object\\).Count)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell($items = @\\(Get-ChildItem \"D:\\\\Proyectos\\\\productbadges\\\\.claude\" -Force\\); Write-Host \".claude directory contains $\\($items.Count\\) items\"; if \\($items.Count -gt 0\\) { $items | ForEach-Object { Write-Host $_.FullName } })",
+      "Bash(xargs grep -l \"ModuleAdminController\")"
+    ]
+  }
+}
