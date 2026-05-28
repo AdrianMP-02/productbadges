@@ -63,35 +63,7 @@ class ProductBadges extends Module
 
     private function installSql(): bool
     {
-        $p = _DB_PREFIX_;
-        $sql = [
-            "CREATE TABLE IF NOT EXISTS `{$p}productbadges` (
-                `id_badge`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `bg_color`   VARCHAR(7)   NOT NULL DEFAULT '#FF0000',
-                `text_color` VARCHAR(7)   NOT NULL DEFAULT '#FFFFFF',
-                `position`   TINYINT(1)   NOT NULL DEFAULT 0,
-                `active`     TINYINT(1)   NOT NULL DEFAULT 1,
-                `date_add`   DATETIME     NOT NULL,
-                `date_upd`   DATETIME     NOT NULL,
-                PRIMARY KEY (`id_badge`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            "CREATE TABLE IF NOT EXISTS `{$p}productbadges_lang` (
-                `id_badge` INT UNSIGNED NOT NULL,
-                `id_lang`  INT UNSIGNED NOT NULL,
-                `label`    VARCHAR(255) NOT NULL DEFAULT '',
-                PRIMARY KEY (`id_badge`, `id_lang`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            "CREATE TABLE IF NOT EXISTS `{$p}productbadges_product` (
-                `id_badge`   INT UNSIGNED NOT NULL,
-                `id_product` INT UNSIGNED NOT NULL,
-                PRIMARY KEY (`id_badge`, `id_product`),
-                KEY `idx_product` (`id_product`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-        ];
-
-        foreach ($sql as $query) {
+        foreach (include __DIR__ . '/sql/install.php' as $query) {
             if (!Db::getInstance()->execute($query)) {
                 return false;
             }
@@ -102,14 +74,7 @@ class ProductBadges extends Module
 
     private function uninstallSql(): bool
     {
-        $p = _DB_PREFIX_;
-        $sql = [
-            "DROP TABLE IF EXISTS `{$p}productbadges_product`",
-            "DROP TABLE IF EXISTS `{$p}productbadges_lang`",
-            "DROP TABLE IF EXISTS `{$p}productbadges`",
-        ];
-
-        foreach ($sql as $query) {
+        foreach (include __DIR__ . '/sql/uninstall.php' as $query) {
             if (!Db::getInstance()->execute($query)) {
                 return false;
             }
@@ -175,7 +140,7 @@ class ProductBadges extends Module
             $active      = (int) Tools::getValue('PRODUCTBADGES_ACTIVE');
             $showListing = (int) Tools::getValue('PRODUCTBADGES_SHOW_LISTING');
             $showProduct = (int) Tools::getValue('PRODUCTBADGES_SHOW_PRODUCT');
-            $maxBadges   = max(1, (int) Tools::getValue('PRODUCTBADGES_MAX_BADGES'));
+            $maxBadges   = max(0, (int) Tools::getValue('PRODUCTBADGES_MAX_BADGES'));
 
             Configuration::updateValue('PRODUCTBADGES_ACTIVE',       $active);
             Configuration::updateValue('PRODUCTBADGES_SHOW_LISTING', $showListing);
@@ -271,7 +236,11 @@ class ProductBadges extends Module
         }
 
         $this->context->controller->addCSS($this->_path . 'views/css/productbadges.css');
-        $this->context->controller->addJS($this->_path . 'views/js/productbadges_front.js');
+
+        // JS handles product page + quick view from any listing page — skip only if product badges disabled
+        if (Configuration::get('PRODUCTBADGES_SHOW_PRODUCT')) {
+            $this->context->controller->addJS($this->_path . 'views/js/productbadges_front.js');
+        }
     }
 
     /**

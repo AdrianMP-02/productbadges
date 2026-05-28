@@ -225,6 +225,10 @@ class AdminProductBadgesController extends ModuleAdminController
             $this->ajaxDie(json_encode(['success' => false, 'message' => 'Invalid parameters']));
         }
 
+        if (!Validate::isLoadedObject(new ProductBadge($idBadge))) {
+            $this->ajaxDie(json_encode(['success' => false, 'message' => 'Badge not found']));
+        }
+
         Db::getInstance()->delete(
             'productbadges_product',
             '`id_badge` = ' . $idBadge . ' AND `id_product` = ' . $idProduct
@@ -244,6 +248,10 @@ class AdminProductBadgesController extends ModuleAdminController
 
         if (!$idBadge || !$idProduct) {
             $this->ajaxDie(json_encode(['success' => false, 'message' => 'Invalid parameters']));
+        }
+
+        if (!Validate::isLoadedObject(new ProductBadge($idBadge))) {
+            $this->ajaxDie(json_encode(['success' => false, 'message' => 'Badge not found']));
         }
 
         // Upsert – ignore duplicate key
