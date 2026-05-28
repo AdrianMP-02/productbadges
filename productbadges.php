@@ -175,7 +175,7 @@ class ProductBadges extends Module
             $active      = (int) Tools::getValue('PRODUCTBADGES_ACTIVE');
             $showListing = (int) Tools::getValue('PRODUCTBADGES_SHOW_LISTING');
             $showProduct = (int) Tools::getValue('PRODUCTBADGES_SHOW_PRODUCT');
-            $maxBadges   = max(1, (int) Tools::getValue('PRODUCTBADGES_MAX_BADGES'));
+            $maxBadges   = max(0, (int) Tools::getValue('PRODUCTBADGES_MAX_BADGES'));
 
             Configuration::updateValue('PRODUCTBADGES_ACTIVE',       $active);
             Configuration::updateValue('PRODUCTBADGES_SHOW_LISTING', $showListing);
