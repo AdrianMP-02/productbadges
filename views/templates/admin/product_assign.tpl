@@ -162,7 +162,7 @@
     }, function (resp) {
       if (resp && resp.success) {
         $('#pb-no-products').remove();
-        var $row = $('<tr id="pb-product-row-' + resp.id_product + '"></tr>');
+        var $row = $('<tr id="pb-product-row-' + parseInt(resp.id_product, 10) + '"></tr>');
         $row.append('<td>' + parseInt(resp.id_product, 10) + '</td>');
         $row.append('<td>' + $('<span>').text(resp.name).html() + '</td>');
         $row.append('<td>' + $('<span>').text(resp.reference).html() + '</td>');

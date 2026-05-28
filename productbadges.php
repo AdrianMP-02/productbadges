@@ -271,7 +271,11 @@ class ProductBadges extends Module
         }
 
         $this->context->controller->addCSS($this->_path . 'views/css/productbadges.css');
-        $this->context->controller->addJS($this->_path . 'views/js/productbadges_front.js');
+
+        // JS handles product page + quick view from any listing page — skip only if product badges disabled
+        if (Configuration::get('PRODUCTBADGES_SHOW_PRODUCT')) {
+            $this->context->controller->addJS($this->_path . 'views/js/productbadges_front.js');
+        }
     }
 
     /**
